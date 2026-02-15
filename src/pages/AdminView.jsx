@@ -6,7 +6,7 @@ export default function AdminView() {
   const [roundActive, setRoundActive] = useState(false);
   const [roundId, setRoundId] = useState(null);
   const [submissions, setSubmissions] = useState([]);
-  const [pointInputs, setPointInputs] = useState({});
+  const [timerDuration, setTimerDuration] = useState(60);
 
   useEffect(() => {
     socket.on("teams-updated", (data) => {
@@ -36,8 +36,9 @@ export default function AdminView() {
       setRoundActive(false);
       setRoundId(null);
       setSubmissions([]);
-      setPointInputs({});
     });
+
+    socket.emit("admin:request-state");
 
     return () => {
       socket.off("teams-updated");
@@ -49,19 +50,12 @@ export default function AdminView() {
     };
   }, []);
 
-  const startRound = () => socket.emit("admin:start-round");
+  const startRound = () => socket.emit("admin:start-round", { duration: Number(timerDuration) });
   const endRound = () => socket.emit("admin:end-round");
   const resetGame = () => {
     if (window.confirm("Reset the entire game? All scores will be lost.")) {
       socket.emit("admin:reset-game");
     }
-  };
-
-  const awardPoints = (teamName) => {
-    const points = Number(pointInputs[teamName]);
-    if (isNaN(points)) return;
-    socket.emit("admin:award-points", { teamName, points });
-    setPointInputs((prev) => ({ ...prev, [teamName]: "" }));
   };
 
   const teamNames = Object.keys(teams);
@@ -72,9 +66,20 @@ export default function AdminView() {
         <h1>👑 Admin Panel</h1>
         <div className="admin-controls">
           {!roundActive ? (
-            <button onClick={startRound} className="btn btn-primary">
-              ▶️ Start Round {(roundId || 0) + 1}
-            </button>
+            <>
+              <input
+                type="number"
+                min="5"
+                max="600"
+                value={timerDuration}
+                onChange={(e) => setTimerDuration(e.target.value)}
+                style={{ width: 70, textAlign: "center" }}
+                title="Timer duration (seconds)"
+              />
+              <button onClick={startRound} className="btn btn-primary">
+                ▶️ Start Round {(roundId || 0) + 1}
+              </button>
+            </>
           ) : (
             <button onClick={endRound} className="btn btn-danger">
               ⏹️ End Round {roundId}
@@ -108,24 +113,15 @@ export default function AdminView() {
                     ))}
                   </div>
                   <div className="points-row">
-                    <input
-                      type="number"
-                      placeholder="Points"
-                      value={pointInputs[name] || ""}
-                      onChange={(e) =>
-                        setPointInputs((prev) => ({
-                          ...prev,
-                          [name]: e.target.value,
-                        }))
-                      }
-                      onKeyDown={(e) => e.key === "Enter" && awardPoints(name)}
-                    />
-                    <button
-                      onClick={() => awardPoints(name)}
-                      className="btn btn-sm btn-primary"
-                    >
-                      Award
-                    </button>
+                    {[50, 10, 5].map((pts) => (
+                      <button
+                        key={pts}
+                        onClick={() => socket.emit("admin:award-points", { teamName: name, points: pts })}
+                        className="btn btn-sm btn-primary"
+                      >
+                        +{pts}
+                      </button>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -161,6 +157,17 @@ export default function AdminView() {
                     </span>
                   </div>
                   <p className="submission-answer">{s.answer}</p>
+                  <div className="points-row">
+                    {[50, 10, 5].map((pts) => (
+                      <button
+                        key={pts}
+                        onClick={() => socket.emit("admin:award-points", { teamName: s.team, points: pts })}
+                        className="btn btn-sm btn-primary"
+                      >
+                        +{pts}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

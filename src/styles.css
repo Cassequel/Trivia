@@ -246,6 +246,80 @@ textarea {
   font-size: 0.9rem;
 }
 
+.timer {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.timer-warning {
+  color: var(--gold);
+}
+
+.timer-urgent {
+  color: var(--danger);
+  animation: pulse-text 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-text {
+  from { opacity: 1; }
+  to { opacity: 0.5; }
+}
+
+/* === History Panel === */
+.history-btn {
+  margin-top: 16px;
+}
+
+.history-panel {
+  width: 100%;
+  max-width: 400px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-panel h3 {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.history-entry {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-round {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.history-answer {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.history-points {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.history-points-earned {
+  color: var(--success);
+}
+
 /* === Admin View === */
 .admin-header {
   display: flex;

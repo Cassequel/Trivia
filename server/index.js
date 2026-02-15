@@ -43,13 +43,13 @@ io.on("connection", (socket) => {
 
   // --- Player events ---
 
-  socket.on("join-team", ({ playerName, teamName }, callback) => {
-    if (!playerName?.trim() || !teamName?.trim()) {
-      return callback?.({ error: "Name and team are required" });
+  socket.on("join-team", ({ teamName }, callback) => {
+    if (!teamName?.trim()) {
+      return callback?.({ error: "Team name is required" });
     }
 
-    game.joinTeam(socket.id, playerName.trim(), teamName.trim());
-    console.log(`${playerName} joined team ${teamName}`);
+    game.joinTeam(socket.id, teamName.trim(), teamName.trim());
+    console.log(`Team ${teamName} joined`);
     broadcastTeams();
     callback?.({ success: true });
   });
@@ -67,12 +67,25 @@ io.on("connection", (socket) => {
     callback?.({ success: true, order: submission.order });
   });
 
+  socket.on("admin:request-state", () => {
+    socket.emit("teams-updated", game.getTeamsData());
+    socket.emit("scores-updated", game.getLeaderboard());
+    if (game.currentRound) {
+      if (game.currentRound.active) {
+        socket.emit("round-started", { roundId: game.currentRound.id, duration: 0 });
+      } else {
+        socket.emit("round-ended");
+      }
+      socket.emit("all-submissions", game.currentRound.submissions);
+    }
+  });
+
   // --- Admin events ---
 
-  socket.on("admin:start-round", () => {
+  socket.on("admin:start-round", ({ duration } = {}) => {
     const round = game.startRound();
     console.log(`Round ${round.id} started`);
-    io.emit("round-started", { roundId: round.id });
+    io.emit("round-started", { roundId: round.id, duration: duration || 0 });
   });
 
   socket.on("admin:end-round", () => {
